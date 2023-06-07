@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"internal/fetch"
 	"os"
 )
 
 func commandHelp() error {
-	fmt.Println("Welcome to the Pokedex")
+	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
 	fmt.Println("help: Displays a help message")
@@ -59,7 +60,8 @@ func main() {
 		},
 	}
 
-	fmt.Print("pokedexcli> ")
+	fetch.Fetch("abc123", make(map[string]string))
+	fmt.Print("Pokedex > ")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		if value, ok := commands[scanner.Text()]; ok {
@@ -67,6 +69,16 @@ func main() {
 		} else {
 			fmt.Println("Error: Unknown command '" + string(scanner.Text()) + "'")
 		}
-		fmt.Print("pokedexcli> ")
+		fmt.Print("Pokedex > ")
 	}
 }
+
+//Try to fetch all the data from the API for that endpoint
+	//try to make a struct that will accept the data (like a class)
+	//Convert the response to a struct
+	//transverse the struct in a nice format
+		//use a function to return the key that you need
+			//Function should transverse the struct and search for the key
+//Try to filter the data that is being returned usin query param
+	//Use a map to get the dat0a from the user
+	//analyse the map
