@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"pokecache"
+	"sync"
 )
 
 type cliCommand struct {
@@ -79,29 +80,15 @@ func commandMapb(conf *fetch.Config_params) error {
 	return nil
 }
 
-func main() {
-	conf, cache, commands := __init__()
-	fmt.Print("Pokedex > ")
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		if value, ok := commands[scanner.Text()]; ok {
-			err := value.callback(&conf)
-			if(err != nil) {
-				fmt.Println(err.Error())
-			}
-		} else {
-			fmt.Println("Error: Unknown command '" + string(scanner.Text()) + "'")
-		}
-		fmt.Print("Pokedex > ")
-	}
-}
-
-func __init__() (fetch.Config_params, map[string]pokecache.CacheEntry, map[string]cliCommand){
+func __init__() (fetch.Config_params, pokecache.Cache, map[string]cliCommand){
 	conf := fetch.Config_params{
 		Offset: "0",
 		Limit: 0,
 	}
-	cache := make(map[string]pokecache.CacheEntry)
+	cache := pokecache.Cache {
+		Mapper: make(map[string]pokecache.CacheEntry),
+		Mux: &sync.Mutex{},
+	}
 	commands := map[string]cliCommand{
 		"help": {
 			name:        "help",
@@ -125,4 +112,21 @@ func __init__() (fetch.Config_params, map[string]pokecache.CacheEntry, map[strin
 		},
 	}
 	return conf, cache, commands
+}
+
+func main() {
+	conf, cache, commands := __init__()
+	fmt.Print("Pokedex > ")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		if value, ok := commands[scanner.Text()]; ok {
+			err := value.callback(&conf)
+			if(err != nil) {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println("Error: Unknown command '" + string(scanner.Text()) + "'")
+		}
+		fmt.Print("Pokedex > ")
+	}
 }
