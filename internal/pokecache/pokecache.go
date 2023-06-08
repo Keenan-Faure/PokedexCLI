@@ -19,7 +19,7 @@ type Cache struct {
 // var duration time.Duration = 10000000000
 // fmt.Println(duration.Seconds())
 func (c Cache) NewCache(interval time.Duration, val []byte) CacheEntry {
-	Reaploop(c.Mapper, interval)
+	c.Reaploop(interval)
 	return CacheEntry{
 		createdAt: time.Now(),
 		val: val,
@@ -33,27 +33,33 @@ func IsOldCache(cachedTime time.Time, interval time.Duration) bool {
 }
 
 func (c Cache) Add(key string, val []byte) {
+	c.Mux.Lock()
 	c.Mapper[key] = CacheEntry {
 		createdAt: time.Now(),
 		val: val,
 	}
+	c.Mux.Unlock()
 }
 
 func (c Cache) Get(key string) ([]byte, bool) {
+	c.Mux.Lock()
 	_, ok := c.Mapper[key]
 	if(ok) {
 		return c.Mapper[key].val, true
 	}
+	c.Mux.Unlock()
 	return nil, false
 }
 
-func Reaploop(mapper map[string]CacheEntry, interval time.Duration) {
-	for key := range mapper {
-		if(IsOldCache(mapper[key].createdAt, interval)) {
-			delete(mapper, key)
+func (c Cache) Reaploop(interval time.Duration) {
+	c.Mux.Lock()
+	for key := range c.Mapper {
+		if(IsOldCache(c.Mapper[key].createdAt, interval)) {
+			delete(c.Mapper, key)
 		}
 		continue
 	}
+	c.Mux.Unlock()
 }
 
 //add the Add func
