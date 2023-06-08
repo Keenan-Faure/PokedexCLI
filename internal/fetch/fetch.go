@@ -3,10 +3,15 @@ package fetch
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
+
+type Config_params struct {
+	Offset string
+	Limit  int
+}
 
 type pokeloc struct {
 	Count    int    `json:"count"`
@@ -18,7 +23,7 @@ type pokeloc struct {
 	} `json:"results"`
 }
 
-func GET(url string, query_params map[string]string) (pokeloc, error){
+func GET(url string, query_params *Config_params) (pokeloc, error){
 	if(url != "") {
 		url = add_query_params(url, query_params)
 		resp, err := http.Get(url)
@@ -40,17 +45,12 @@ func GET(url string, query_params map[string]string) (pokeloc, error){
 	return pokeloc{}, errors.New("undefined url")
 }
 
-func add_query_params(url string, query_params map[string]string) string {
-	iterator := 0
-	if(url != "" && query_params != nil) {
-		for key := range query_params {
-			if(iterator == 0) {
-				url = url + "?"
-				iterator ++
-			}
-			url = url + key + "=" + query_params[key] + "&"
-		}
-		url = strings.TrimSuffix(url, "&")
+func add_query_params(url string, query_params *Config_params) string {
+	if(url != "" && query_params.Offset != "") {
+		url = url + "?"
+		url = url + "offset=" + query_params.Offset + "&"
+		newLimit := fmt.Sprintf("%d", query_params.Limit)
+		url = url + "limit=" + newLimit
 		return url
 	}
 	return url

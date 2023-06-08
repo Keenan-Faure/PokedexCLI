@@ -1,6 +1,6 @@
 module github.com/keenan-faure/pokedexcli
 
-require internal/fetch v1.0.0
 replace internal/fetch => ./internal/fetch
+replace interal/pokecache => ./internal/pokecache
 
 go 1.20

@@ -2,23 +2,44 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fetch"
 	"fmt"
 	"os"
+	"pokecache"
 )
-
-type config struct {
-	offset string
-	limit  int
-}
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(conf *config) error
+	callback    func(conf *fetch.Config_params) error
 }
 
-func commandHelp(conf config) error {
+func incrementConf(conf *fetch.Config_params) error{
+	newLimit := fmt.Sprintf("%d", conf.Limit)
+	conf.Offset = newLimit
+	conf.Limit = conf.Limit + 20
+	// fmt.Println("I am incrementor offset " + conf.Offset)
+	// fmt.Println(conf.Limit)
+	return nil
+}
+
+func decrementConf(conf *fetch.Config_params) error{
+	if(conf.Limit == 0) {
+		return errors.New("pagination error")
+	} else if(conf.Limit == 20) {
+		return errors.New("pagination error")
+	} else {
+		newLimit := fmt.Sprintf("%d", (conf.Limit - 40))
+		conf.Offset = newLimit
+		conf.Limit = conf.Limit - 20
+	}
+	// fmt.Println("I am decrementor offset " + conf.Offset)
+	// fmt.Println(conf.Limit)
+	return nil
+}
+
+func commandHelp(conf *fetch.Config_params) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -27,58 +48,47 @@ func commandHelp(conf config) error {
 	return nil
 }
 
-func commandExit(conf config) error {
+func commandExit(conf *fetch.Config_params) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(conf config) error {
-	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", query_params)
+func commandMap(conf *fetch.Config_params) error {
+	incrementConf(conf)
+	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf)
 	if(err != nil) {
-		fmt.Println(err.Error())
+		return err
 	}
 	for value := range resp.Results {
 		fmt.Println(resp.Results[value].Name)
 	}
 	return nil
 }
-func commandMapb(conf config) error {
-	fmt.Println("I am mapb")
+func commandMapb(conf *fetch.Config_params) error {
+	err := decrementConf(conf)
+	if(err != nil) {
+		return err
+	}
+	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf)
+	if(err != nil) {
+		return err
+	}
+	for value := range resp.Results {
+		fmt.Println(resp.Results[value].Name)
+	}
 	return nil
 }
 
 func main() {
-	conf := config {
-		offset: "0",
-		limit: 20,
-	}
-	commands := map[string]cliCommand{
-		"help": {
-			name:        "help",
-			description: "Displays a help message",
-			callback:    ,
-		},
-		"exit": {
-			name:        "exit",
-			description: "Exit the Pokedex",
-			callback:    commandExit(conf),
-		},
-		"map": {
-			name:        "map",
-			description: "Displays the names of 20 location areas",
-			callback:    commandMap(conf),
-		},
-		"mapb": {
-			name:        "mapb",
-			description: "Displays the previous 20 location areas",
-			callback:    commandMapb(conf),
-		},
-	}
+	conf, cache, commands := __init__()
 	fmt.Print("Pokedex > ")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		if value, ok := commands[scanner.Text()]; ok {
-			value.callback(&conf)
+			err := value.callback(&conf)
+			if(err != nil) {
+				fmt.Println(err.Error())
+			}
 		} else {
 			fmt.Println("Error: Unknown command '" + string(scanner.Text()) + "'")
 		}
@@ -86,12 +96,33 @@ func main() {
 	}
 }
 
-//Try to fetch all the data from the API for that endpoint
-	//try to make a struct that will accept the data (like a class)
-	//Convert the response to a struct
-	//transverse the struct in a nice format
-		//use a function to return the key that you need
-			//Function should transverse the struct and search for the key
-//Try to filter the data that is being returned usin query param
-	//Use a map to get the dat0a from the user
-	//analyse the map
+func __init__() (fetch.Config_params, map[string]pokecache.CacheEntry, map[string]cliCommand){
+	conf := fetch.Config_params{
+		Offset: "0",
+		Limit: 0,
+	}
+	cache := make(map[string]pokecache.CacheEntry)
+	commands := map[string]cliCommand{
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+		"map": {
+			name:        "map",
+			description: "Displays the names of 20 location areas",
+			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the previous 20 location areas",
+			callback:    commandMapb,
+		},
+	}
+	return conf, cache, commands
+}
