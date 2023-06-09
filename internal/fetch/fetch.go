@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"pokecache"
 )
 
 type Config_params struct {
-	Offset string
+	Offset int
 	Limit  int
 }
 
@@ -23,9 +24,22 @@ type pokeloc struct {
 	} `json:"results"`
 }
 
-func GET(url string, query_params *Config_params) (pokeloc, error){
+func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error){
 	if(url != "") {
 		url = add_query_params(url, query_params)
+		fmt.Println("=========================")
+		fmt.Println("URL: " + url)
+		fmt.Println("=========================")
+		cachedValue, exists := cache.Get(url)
+		if(exists) {
+			fmt.Println("I am using cache")
+			result := pokeloc{}
+			err_r := json.Unmarshal(cachedValue, &result)
+			if(err_r != nil) {
+				return pokeloc{}, err_r
+			}
+			return result, nil
+		}
 		resp, err := http.Get(url)
 		if(err != nil) {
 			return pokeloc{}, err
@@ -35,10 +49,12 @@ func GET(url string, query_params *Config_params) (pokeloc, error){
 		if(err != nil) {
 			return pokeloc{},err
 		}
+		cache.Add(url, body)
+		fmt.Println("I am adding new cache")
 		result := pokeloc{}
 		err_r := json.Unmarshal(body, &result)
 		if(err_r != nil) {
-			return pokeloc{}, err
+			return pokeloc{}, err_r
 		}
 		return result, nil
 	}
@@ -46,9 +62,10 @@ func GET(url string, query_params *Config_params) (pokeloc, error){
 }
 
 func add_query_params(url string, query_params *Config_params) string {
-	if(url != "" && query_params.Offset != "") {
+	if(url != "") {
 		url = url + "?"
-		url = url + "offset=" + query_params.Offset + "&"
+		newOffset := fmt.Sprintf("%d", query_params.Offset)
+		url = url + "offset=" + newOffset + "&"
 		newLimit := fmt.Sprintf("%d", query_params.Limit)
 		url = url + "limit=" + newLimit
 		return url

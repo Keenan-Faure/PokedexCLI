@@ -7,40 +7,35 @@ import (
 	"fmt"
 	"os"
 	"pokecache"
-	"sync"
+	"time"
 )
+
+//15 seconds cache
+const cacheDuration = 1 * time.Second
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(conf *fetch.Config_params) error
+	callback    func(conf *fetch.Config_params, cache pokecache.Cache) error
 }
 
-func incrementConf(conf *fetch.Config_params) error{
-	newLimit := fmt.Sprintf("%d", conf.Limit)
-	conf.Offset = newLimit
-	conf.Limit = conf.Limit + 20
-	// fmt.Println("I am incrementor offset " + conf.Offset)
-	// fmt.Println(conf.Limit)
+func incrementConf(conf *fetch.Config_params) error {
+	conf.Offset = conf.Offset + 20
 	return nil
 }
 
-func decrementConf(conf *fetch.Config_params) error{
-	if(conf.Limit == 0) {
+func decrementConf(conf *fetch.Config_params) error {
+	if conf.Offset == 0 {
 		return errors.New("pagination error")
-	} else if(conf.Limit == 20) {
+	} else if conf.Offset == -20 {
 		return errors.New("pagination error")
 	} else {
-		newLimit := fmt.Sprintf("%d", (conf.Limit - 40))
-		conf.Offset = newLimit
-		conf.Limit = conf.Limit - 20
+		conf.Offset = conf.Offset - 20
 	}
-	// fmt.Println("I am decrementor offset " + conf.Offset)
-	// fmt.Println(conf.Limit)
 	return nil
 }
 
-func commandHelp(conf *fetch.Config_params) error {
+func commandHelp(conf *fetch.Config_params, cache pokecache.Cache) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -49,15 +44,20 @@ func commandHelp(conf *fetch.Config_params) error {
 	return nil
 }
 
-func commandExit(conf *fetch.Config_params) error {
+func commandLen(conf *fetch.Config_params, cache pokecache.Cache) error {
+	fmt.Println(len(cache.Mapper))
+	return nil
+}
+
+func commandExit(conf *fetch.Config_params, cache pokecache.Cache) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(conf *fetch.Config_params) error {
+func commandMap(conf *fetch.Config_params, cache pokecache.Cache) error {
 	incrementConf(conf)
-	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf)
-	if(err != nil) {
+	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
+	if err != nil {
 		return err
 	}
 	for value := range resp.Results {
@@ -65,13 +65,13 @@ func commandMap(conf *fetch.Config_params) error {
 	}
 	return nil
 }
-func commandMapb(conf *fetch.Config_params) error {
+func commandMapb(conf *fetch.Config_params, cache pokecache.Cache) error {
 	err := decrementConf(conf)
-	if(err != nil) {
+	if err != nil {
 		return err
 	}
-	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf)
-	if(err != nil) {
+	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
+	if err != nil {
 		return err
 	}
 	for value := range resp.Results {
@@ -80,14 +80,10 @@ func commandMapb(conf *fetch.Config_params) error {
 	return nil
 }
 
-func __init__() (fetch.Config_params, pokecache.Cache, map[string]cliCommand){
+func __init__() (fetch.Config_params, map[string]cliCommand) {
 	conf := fetch.Config_params{
-		Offset: "0",
-		Limit: 0,
-	}
-	cache := pokecache.Cache {
-		Mapper: make(map[string]pokecache.CacheEntry),
-		Mux: &sync.Mutex{},
+		Offset: -20,
+		Limit:  20,
 	}
 	commands := map[string]cliCommand{
 		"help": {
@@ -110,18 +106,24 @@ func __init__() (fetch.Config_params, pokecache.Cache, map[string]cliCommand){
 			description: "Displays the previous 20 location areas",
 			callback:    commandMapb,
 		},
+		"len": {
+			name:        "len",
+			description: "Displays the len of mapper",
+			callback:    commandLen,
+		},
 	}
-	return conf, cache, commands
+	return conf, commands
 }
 
 func main() {
-	conf, cache, commands := __init__()
+	conf, commands := __init__()
+	cache := pokecache.NewCache(cacheDuration)
 	fmt.Print("Pokedex > ")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		if value, ok := commands[scanner.Text()]; ok {
-			err := value.callback(&conf)
-			if(err != nil) {
+			err := value.callback(&conf, cache)
+			if err != nil {
 				fmt.Println(err.Error())
 			}
 		} else {
