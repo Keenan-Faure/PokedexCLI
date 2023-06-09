@@ -1,61 +1,69 @@
 package pokecache
 
 import (
+	"fmt"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
-	"fmt"
 )
 
-func TestGET(t *testing.T) {
-	const interval = 5 * time.Second
-	cases := []struct {
-		key string
-		val []byte
-	}{
-		{
-			key: "https://example.com",
-			val: []byte("testdata"),
-		},
-		{
-			key: "https://example.com/path",
-			val: []byte("moretestdata"),
-		},
+func TestNewCache(t *testing.T) {
+	timeDuration := 5 * time.Second
+	fmt.Println("Test Case 1 - Create Empty Cache")
+	expected := Cache{
+		Mapper: make(map[string]CacheEntry),
+		Mux:    &sync.Mutex{},
 	}
+	actual := NewCache(timeDuration)
+	if(len(expected.Mapper) != len(actual.Mapper)) {
+		t.Errorf("Expected " + strconv.Itoa(len(expected.Mapper)) + " but found " + strconv.Itoa(len(actual.Mapper)))
+	}
+}
 
-	for i, c := range cases {
-		t.Run(fmt.Sprintf("Test case %v", i), func(t *testing.T) {
-			cache := NewCache(interval)
-			cache.Add(c.key, c.val)
-			val, ok := cache.Get(c.key)
-			if !ok {
-				t.Errorf("expected to find key")
-				return
-			}
-			if string(val) != string(c.val) {
-				t.Errorf("expected to find value")
-				return
-			}
-		})
+func TestAdd(t *testing.T) {
+	timeDuration := 2 * time.Second
+	fmt.Println("Test Case 1 - Add new cache into Cache")
+	expectedLength := 1
+	actual := NewCache(timeDuration)
+	actual.Add("key", []byte("TestString"))
+	if(expectedLength != len(actual.Mapper)) {
+		t.Errorf("Expected 1 but found " + strconv.Itoa(len(actual.Mapper)))
+	}
+}
+
+func TestGet(t *testing.T) {
+	timeDuration := 2 * time.Second
+	fmt.Println("Test Case 1 - Get existing key")
+	cache := NewCache(timeDuration)
+	cache.Add("key", []byte("TestString"))
+	_, ok := cache.Get("key")
+	if(!ok) {
+		t.Errorf("Expected 'key' but found ''")
+	}
+	fmt.Println("Test Case 2 - Get non-existant key")
+	cache = NewCache(timeDuration)
+	_, ok = cache.Get("key")
+	if(ok) {
+		t.Errorf("Expected '' but found 'key'")
 	}
 }
 
 func TestReaploop(t *testing.T) {
-	const baseTime = 5 * time.Millisecond
-	const waitTime = baseTime + 5 * time.Millisecond
-	cache := NewCache(baseTime)
-	cache.Add("https://example.com", []byte("testdata"))
-
-	_, ok := cache.Get("https://example.com")
-	if !ok {
-		t.Errorf("expected to find key")
-		return
+	timeDuration := 2 * time.Second
+	cache := NewCache(timeDuration)
+	fmt.Println("Test Case 1 - Key Removal")
+	cache.Add("key", []byte("TestString"))
+	time.Sleep(timeDuration + time.Second)
+	_, ok := cache.Get("key")
+	if(ok) {
+		t.Errorf("Expected '' but found 'key'")
 	}
-
-	time.Sleep(waitTime)
-
-	_, ok = cache.Get("https://example.com")
-	if ok {
-		t.Errorf("expected to not find key")
-		return
+	fmt.Println("Test Case 2 - Non-key Removal")
+	cache = NewCache(timeDuration)
+	cache.Add("key", []byte("TestString"))
+	_, ok = cache.Get("key")
+	if(!ok) {
+		t.Errorf("Expected 'key' but found ''")
 	}
 }
