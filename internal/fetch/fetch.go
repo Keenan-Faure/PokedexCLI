@@ -26,13 +26,9 @@ type pokeloc struct {
 
 func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error){
 	if(url != "") {
-		url = add_query_params(url, query_params)
-		fmt.Println("=========================")
-		fmt.Println("URL: " + url)
-		fmt.Println("=========================")
+		url = AddParams(url, query_params)
 		cachedValue, exists := cache.Get(url)
 		if(exists) {
-			fmt.Println("I am using cache")
 			result := pokeloc{}
 			err_r := json.Unmarshal(cachedValue, &result)
 			if(err_r != nil) {
@@ -50,7 +46,6 @@ func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokelo
 			return pokeloc{},err
 		}
 		cache.Add(url, body)
-		fmt.Println("I am adding new cache")
 		result := pokeloc{}
 		err_r := json.Unmarshal(body, &result)
 		if(err_r != nil) {
@@ -61,7 +56,7 @@ func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokelo
 	return pokeloc{}, errors.New("undefined url")
 }
 
-func add_query_params(url string, query_params *Config_params) string {
+func AddParams(url string, query_params *Config_params) string {
 	if(url != "") {
 		url = url + "?"
 		newOffset := fmt.Sprintf("%d", query_params.Offset)
