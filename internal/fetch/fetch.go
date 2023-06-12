@@ -14,16 +14,6 @@ type Config_params struct {
 	Limit  int
 }
 
-type pokeloc struct {
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous any    `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
-}
-
 func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error){
 	if(url != "") {
 		url = AddParams(url, query_params)
@@ -41,8 +31,8 @@ func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokelo
 			return pokeloc{}, err
 		}
 		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
-		if(err != nil) {
+		body, err_ := io.ReadAll(resp.Body)
+		if(err_ != nil) {
 			return pokeloc{},err
 		}
 		cache.Add(url, body)
@@ -54,6 +44,68 @@ func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokelo
 		return result, nil
 	}
 	return pokeloc{}, errors.New("undefined url")
+}
+
+func GETExplore(url string, query_params *Config_params, cache pokecache.Cache) (pokeExplore, error) {
+	if(url != "") {
+		cachedValue, exists := cache.Get(url)
+		if(exists) {
+			result := pokeExplore{}
+			err_r := json.Unmarshal(cachedValue, &result)
+			if(err_r != nil) {
+				return pokeExplore{}, err_r
+			}
+			return result, nil
+		}
+		resp, err := http.Get(url)
+		if(err != nil) {
+			return pokeExplore{}, err
+		}
+		defer resp.Body.Close()
+		body, err_ := io.ReadAll(resp.Body)
+		if(err_ != nil) {
+			return pokeExplore{},err
+		}
+		cache.Add(url, body)
+		result := pokeExplore{}
+		err_r := json.Unmarshal(body, &result)
+		if(err_r != nil) {
+			return pokeExplore{}, err_r
+		}
+		return result, nil
+	}
+	return pokeExplore{}, errors.New("undefined url")
+}
+
+func GETPokemon(url string, query_params *Config_params, cache pokecache.Cache) (Pokemon, error) {
+	if(url != "") {
+		cachedValue, exists := cache.Get(url)
+		if(exists) {
+			result := Pokemon{}
+			err_r := json.Unmarshal(cachedValue, &result)
+			if(err_r != nil) {
+				return Pokemon{}, err_r
+			}
+			return result, nil
+		}
+		resp, err := http.Get(url)
+		if(err != nil) {
+			return Pokemon{}, err
+		}
+		defer resp.Body.Close()
+		body, err_ := io.ReadAll(resp.Body)
+		if(err_ != nil) {
+			return Pokemon{},err
+		}
+		cache.Add(url, body)
+		result := Pokemon{}
+		err_r := json.Unmarshal(body, &result)
+		if(err_r != nil) {
+			return Pokemon{}, err_r
+		}
+		return result, nil
+	}
+	return Pokemon{}, errors.New("undefined url")
 }
 
 func AddParams(url string, query_params *Config_params) string {
