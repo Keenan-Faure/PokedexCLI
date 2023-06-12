@@ -18,10 +18,13 @@ func CreatePokedex() (Pokedex) {
 }
 
 func (p *Pokedex) AddPokemon(pokemon fetch.Pokemon) {
-	//make check if pokemon already exists it does not add two of the same type
-	p.Mux.Lock()
-	defer p.Mux.Unlock()
-	p.Mapper[pokemon.Name] = pokemon
+	_, ok := p.GetPokemon(pokemon.Name)
+	if(!ok) {
+		p.Mux.Lock()
+		defer p.Mux.Unlock()
+		p.Mapper[pokemon.Name] = pokemon
+		return
+	}
 }
 
 func (p *Pokedex) GetPokemon(key string) (fetch.Pokemon, bool) {

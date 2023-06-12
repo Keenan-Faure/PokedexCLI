@@ -17,21 +17,24 @@ type cliCommand struct {
 }
 
 func commandCatch(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
-	resp, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/" + name, conf, cache)
-	if err != nil {
-		return err
+	if(name != "") {
+		resp, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/" + name, conf, cache)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Throwing a Pokeball at " + name + "...")
+		baseExperience := resp.BaseExperience
+		rngLimit := baseExperience * 2
+		rngNumber := rand.Intn(rngLimit)
+		if(rngNumber > baseExperience) {
+			fmt.Println(name + " was caught!")
+			pokedex.AddPokemon(resp)
+		} else {
+			fmt.Println(name + " escaped!")
+		}
+		return nil
 	}
-	fmt.Println("Throwing a Pokeball at " + name + "...")
-	baseExperience := resp.BaseExperience
-	rngLimit := baseExperience * 2
-	rngNumber := rand.Intn(rngLimit)
-	if(rngNumber > baseExperience) {
-		fmt.Println(name + " was caught!")
-		pokedex.AddPokemon(resp)
-	} else {
-		fmt.Println(name + " escaped!")
-	}
-	return nil
+	return errors.New("undefined pokemon name ''")
 }
 
 func commandExplore(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
@@ -147,7 +150,7 @@ func __init__() (pokedex.Pokedex, fetch.Config_params, map[string]cliCommand) {
 			callback:    commandLen,
 		},
 		"pokecount": {
-			name:        "lpokecounten",
+			name:        "pokecount",
 			description: "Displays the amount of pokemon caught",
 			callback:    commandPokedexCount,
 		},
