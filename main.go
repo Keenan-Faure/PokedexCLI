@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//15 seconds cache
+// 15 seconds cache
 const cacheDuration = 15 * time.Second
 
 func main() {
@@ -23,9 +23,9 @@ func main() {
 		command := command_params[0]
 		explore_name := ""
 		explore_pokeball := ""
-		if(len(command_params) == 2) {
+		if len(command_params) == 2 {
 			explore_name = command_params[1]
-		} else if (len(command_params) == 3) {
+		} else if len(command_params) == 3 {
 			explore_name = command_params[1]
 			explore_pokeball = command_params[2]
 		}

@@ -8,4 +8,6 @@ replace internal/pokeball => ./internal/pokeball
 
 replace internal/clicmd => ./internal/clicmd
 
+replace internal/pokefarm => ./internal/pokefarm
+
 go 1.20
