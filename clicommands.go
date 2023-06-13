@@ -13,15 +13,69 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error
+	callback    func(
+		name string, 
+		pokeball string, 
+		conf *fetch.Config_params, 
+		cache pokecache.Cache, 
+		pokedex *pokedex.Pokedex,
+		pokeballs *pokeball.Pokeball) error
 }
 
-func commandCatch(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandPokedex(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
+	for _, value := range pokedex.Mapper {
+		fmt.Println(" - ", value.Name)
+	}
+	return nil
+}
+
+func commandInspect(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
+	if(name != "") {
+		value, exist := pokedex.GetPokemon(name)
+		if(!exist) {
+			fmt.Println("you have not caught that pokemon")
+		} else {
+			fmt.Println("Name: ", value.Name)
+			fmt.Println("Height: ", value.Height)
+			fmt.Println("Weight: ", value.Weight)
+			fmt.Println("Stats:")
+			for _, key := range value.Stats {
+				fmt.Println(" - ", key.Stat.Name, ": ", key.BaseStat)
+			}
+			fmt.Println("Types:")
+			for _, key := range value.Types {
+				fmt.Println(" - ", key.Type.Name)
+			}
+		}
+	}
+	return nil
+}
+
+func commandCatch(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	if(name != "") {
 		resp, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/" + name, conf, cache)
 		if err != nil {
 			return err
 		}
+		
 		fmt.Println("Throwing a Pokeball at " + name + "...")
 		baseExperience := resp.BaseExperience
 		rngLimit := baseExperience * 2
@@ -29,6 +83,7 @@ func commandCatch(name string, conf *fetch.Config_params, cache pokecache.Cache,
 		if(rngNumber > baseExperience) {
 			fmt.Println(name + " was caught!")
 			pokedex.AddPokemon(resp)
+			fmt.Println("You may now inspect it with the inspect command.")
 		} else {
 			fmt.Println(name + " escaped!")
 		}
@@ -37,7 +92,13 @@ func commandCatch(name string, conf *fetch.Config_params, cache pokecache.Cache,
 	return errors.New("undefined pokemon name ''")
 }
 
-func commandExplore(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandExplore(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	resp, err := fetch.GETExplore("https://pokeapi.co/api/v2/location-area/" + name, conf, cache)
 	if err != nil {
 		return err
@@ -50,7 +111,13 @@ func commandExplore(name string, conf *fetch.Config_params, cache pokecache.Cach
 	return nil
 }
 
-func commandHelp(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandHelp(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -59,22 +126,46 @@ func commandHelp(name string, conf *fetch.Config_params, cache pokecache.Cache, 
 	return nil
 }
 
-func commandLen(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandLen(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	fmt.Println(len(cache.Mapper))
 	return nil
 }
 
-func commandPokedexCount(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandPokedexCount(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	fmt.Println(len(pokedex.Mapper))
 	return nil
 }
 
-func commandExit(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandExit(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandMap(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	incrementConf(conf)
 	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
 	if err != nil {
@@ -85,7 +176,13 @@ func commandMap(name string, conf *fetch.Config_params, cache pokecache.Cache, p
 	}
 	return nil
 }
-func commandMapb(name string, conf *fetch.Config_params, cache pokecache.Cache, pokedex *pokedex.Pokedex) error {
+func commandMapb(
+	name string, 
+	pokeball string, 
+	conf *fetch.Config_params, 
+	cache pokecache.Cache, 
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball) error {
 	err := decrementConf(conf)
 	if err != nil {
 		return err
@@ -117,7 +214,8 @@ func decrementConf(conf *fetch.Config_params) error {
 	return nil
 }
 
-func __init__() (pokedex.Pokedex, fetch.Config_params, map[string]cliCommand) {
+func __init__() (pokeball.Pokeball, pokedex.Pokedex, fetch.Config_params, map[string]cliCommand) {
+	pokeball := pokeball.InitPokeBalls()
 	pokedex := pokedex.CreatePokedex()
 	conf := fetch.Config_params{
 		Offset: -20,
@@ -164,6 +262,16 @@ func __init__() (pokedex.Pokedex, fetch.Config_params, map[string]cliCommand) {
 			description: "Attempts to Catch a pokemon using a pokeball",
 			callback: commandCatch,
 		},
+		"inspect": {
+			name: "inspect",
+			description: "Inspect a caught pokemon's details",
+			callback: commandInspect,
+		},
+		"pokedex": {
+			name: "pokedex",
+			description: "Displays all caught pokemon",
+			callback: commandPokedex,
+		},
 	}
-	return pokedex, conf, commands
+	return pokeball, pokedex, conf, commands
 }
