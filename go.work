@@ -2,7 +2,9 @@ go 1.20
 
 use (
 	.
+	./internal/clicmd
 	./internal/fetch
+	./internal/pokeball
 	./internal/pokecache
 	./internal/pokedex
 )

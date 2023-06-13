@@ -6,4 +6,6 @@ replace internal/pokecache => ./internal/pokecache
 
 replace internal/pokeball => ./internal/pokeball
 
+replace internal/clicmd => ./internal/clicmd
+
 go 1.20
