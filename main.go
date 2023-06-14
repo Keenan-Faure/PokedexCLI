@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"os"
 	"pokecache"
+	"pokefarm"
 	"strings"
 	"time"
 )
 
 // 15 seconds cache
 const cacheDuration = 15 * time.Second
+const pokeFarmInterval = 5 * time.Second
 
 func main() {
+	pokefarm := pokefarm.CreatePokeFarm(pokeFarmInterval)
 	pokeballs, pokedex, conf, commands := clicmd.Init()
 	cache := pokecache.NewCache(cacheDuration)
 	fmt.Print("Pokemon > ")
@@ -30,7 +33,7 @@ func main() {
 			explore_pokeball = command_params[2]
 		}
 		if value, ok := commands[command]; ok {
-			err := value.Callback(explore_name, explore_pokeball, &conf, cache, &pokedex, &pokeballs)
+			err := value.Callback(explore_name, explore_pokeball, &conf, cache, &pokedex, &pokeballs, &pokefarm)
 			if err != nil {
 				fmt.Println(err.Error())
 			}

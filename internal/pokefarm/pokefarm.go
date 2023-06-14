@@ -3,14 +3,16 @@ package pokefarm
 import (
 	"errors"
 	"fetch"
+	"fmt"
 	"sync"
 	"time"
 )
 
-const baseExp = 5
+const baseExp = 3
 
 type FarmPokemon struct {
 	pokemon fetch.Pokemon
+	baseExp int
 	time    time.Time
 }
 
@@ -19,19 +21,30 @@ type PokeFarm struct {
 	Mux      *sync.Mutex
 }
 
-func CreatePokeFarm() PokeFarm {
-
-	return PokeFarm{
+func CreatePokeFarm(interval time.Duration) PokeFarm {
+	pokeFarm := PokeFarm{
 		pokeFarm: make(map[string]FarmPokemon),
 		Mux:      &sync.Mutex{},
 	}
+	go pokeFarm.expLoop(interval)
+	return pokeFarm
 }
 
 func newFarmPokemon(pokemon fetch.Pokemon) FarmPokemon {
 	return FarmPokemon{
 		pokemon: pokemon,
+		baseExp: 0,
 		time:    time.Now().UTC(),
 	}
+}
+
+func (p *PokeFarm) calTotalExp(pokemonName string) int {
+	timeDuration, ok := p.checkDuration(pokemonName)
+	if ok != nil {
+		return 0
+	}
+	exp := int(timeDuration.Seconds()) * baseExp
+	return exp
 }
 
 func (p *PokeFarm) checkDuration(pokemonName string) (time.Duration, error) {
@@ -50,7 +63,7 @@ func (p *PokeFarm) GetPokemon(pokemonName string) (FarmPokemon, error) {
 	if exist {
 		return pokemon, nil
 	}
-	return FarmPokemon{}, errors.New("day care > we do not have that pokemon")
+	return FarmPokemon{}, errors.New("no such pokemon at the pokefarm")
 }
 
 func (p *PokeFarm) AddPokemon(pokemon fetch.Pokemon) {
@@ -58,4 +71,43 @@ func (p *PokeFarm) AddPokemon(pokemon fetch.Pokemon) {
 	p.Mux.Lock()
 	defer p.Mux.Unlock()
 	p.pokeFarm[pokemon.Name] = farmPokemon
+}
+
+func (p *PokeFarm) WithdrawPokemon(pokemonName string) (fetch.Pokemon, error) {
+	pokemon, err := p.GetPokemon(pokemonName)
+	if err != nil {
+		return fetch.Pokemon{}, err
+	}
+	p.Mux.Lock()
+	defer p.Mux.Unlock()
+	delete(p.pokeFarm, pokemon.pokemon.Name)
+	fmt.Println("Successfully withdrew ", pokemonName)
+	fmt.Println(pokemonName, " has ", pokemon.baseExp, " experience")
+	return pokemon.pokemon, nil
+}
+
+func (p *PokeFarm) expLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		p.addExpToFarm(interval)
+	}
+}
+
+func (p *PokeFarm) addExpToFarm(interval time.Duration) {
+	for _, value := range p.pokeFarm {
+		if entry, ok := p.pokeFarm[value.pokemon.Name]; ok {
+			entry.baseExp = p.calTotalExp(value.pokemon.Name)
+			p.pokeFarm[value.pokemon.Name] = entry
+		}
+	}
+}
+
+func (p *PokeFarm) CheckCurrExp() {
+	fmt.Println("Current Pokemon on PokeFarm: ")
+	p.Mux.Lock()
+	defer p.Mux.Unlock()
+	for _, value := range p.pokeFarm {
+		fmt.Printf("%s	|	%d", value.pokemon.Name, value.baseExp)
+		fmt.Println("")
+	}
 }

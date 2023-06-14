@@ -9,6 +9,7 @@ import (
 	"pokeball"
 	"pokecache"
 	"pokedex"
+	"pokefarm"
 )
 
 type cliCommand struct {
@@ -20,7 +21,51 @@ type cliCommand struct {
 		conf *fetch.Config_params,
 		cache pokecache.Cache,
 		pokedex *pokedex.Pokedex,
-		pokeballs *pokeball.Pokeball) error
+		pokeballs *pokeball.Pokeball,
+		pokefarm *pokefarm.PokeFarm) error
+}
+
+func commandWithdrawPokeFarm(
+	name string,
+	pokeball string,
+	conf *fetch.Config_params,
+	cache pokecache.Cache,
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
+	_, err := pokefarm.WithdrawPokemon(name)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
+func commandCheckPokeFarm(
+	name string,
+	pokeball string,
+	conf *fetch.Config_params,
+	cache pokecache.Cache,
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
+	pokefarm.CheckCurrExp()
+	return nil
+}
+
+func commandAddPokeFarm(
+	name string,
+	pokeball string,
+	conf *fetch.Config_params,
+	cache pokecache.Cache,
+	pokedex *pokedex.Pokedex,
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
+	pokemon, exist := pokedex.GetPokemon(name)
+	if !exist {
+		return errors.New("you have not caught " + name)
+	}
+	pokefarm.AddPokemon(pokemon)
+	return nil
 }
 
 func commandPokeballCount(
@@ -29,7 +74,8 @@ func commandPokeballCount(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	fmt.Println("Available Pokeballs are: ")
 	for key, value := range pokeballs.PokeBalls {
 		fmt.Println(" - ", key, ": ", value)
@@ -43,7 +89,8 @@ func commandPokedex(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	for _, value := range pokedex.Mapper {
 		fmt.Println(" - ", value.Name)
 	}
@@ -56,7 +103,8 @@ func commandInspect(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	if name != "" {
 		value, exist := pokedex.GetPokemon(name)
 		if !exist {
@@ -84,7 +132,8 @@ func commandCatch(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	if name != "" {
 		resp, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/"+name, conf, cache)
 		if err != nil {
@@ -94,16 +143,16 @@ func commandCatch(
 		if err != nil {
 			return err
 		}
-		fmt.Println("Throwing a ", pokeball, " at ", name, "...")
+		fmt.Println("Throwing a ", pokeball, "at ", name, "...")
 		baseExperience := resp.BaseExperience
 		rngNumber := rand.Intn(baseExperience * 2)
 		catchChance := pokeballs.IncreaseChance(pokeball, baseExperience, rngNumber)
 		if catchChance > baseExperience {
-			fmt.Println(name, " was caught!")
+			fmt.Println(name, "was caught!")
 			pokedex.AddPokemon(resp)
 			fmt.Println("You may now inspect it with the inspect command.")
 		} else {
-			fmt.Println(name, " escaped!")
+			fmt.Println(name, "escaped!")
 		}
 		return nil
 	}
@@ -116,7 +165,8 @@ func commandExplore(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	resp, err := fetch.GETExplore("https://pokeapi.co/api/v2/location-area/"+name, conf, cache)
 	if err != nil {
 		return err
@@ -135,7 +185,8 @@ func commandHelp(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	fmt.Println("Welcome to Pokemon!")
 	fmt.Println("Usage:")
 	fmt.Println("Format:")
@@ -151,6 +202,9 @@ func commandHelp(
 	fmt.Println("inspect   <pokemon>                 : Inspect a caught pokemon's details")
 	fmt.Println("pokedex                             : Displays caught pokemon")
 	fmt.Println("pokeballs                           : Displays all held pokeballs")
+	fmt.Println("farm-check                          : Displays the current pokemon growth rate")
+	fmt.Println("add-farm                            : Adds a Pokemon to the PokeFarm daycare")
+	fmt.Println("rmv-farm                            : Removes a Pokemon from the PokeFarm daycare")
 	return nil
 }
 
@@ -160,7 +214,8 @@ func commandPokedexCount(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	fmt.Println(len(pokedex.Mapper))
 	return nil
 }
@@ -171,7 +226,8 @@ func commandExit(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	os.Exit(0)
 	return nil
 }
@@ -182,7 +238,8 @@ func commandMap(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	incrementConf(conf)
 	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
 	if err != nil {
@@ -199,7 +256,8 @@ func commandMapb(
 	conf *fetch.Config_params,
 	cache pokecache.Cache,
 	pokedex *pokedex.Pokedex,
-	pokeballs *pokeball.Pokeball) error {
+	pokeballs *pokeball.Pokeball,
+	pokefarm *pokefarm.PokeFarm) error {
 	err := decrementConf(conf)
 	if err != nil {
 		return err
@@ -288,6 +346,21 @@ func Init() (pokeball.Pokeball, pokedex.Pokedex, fetch.Config_params, map[string
 			Name:        "pokeballs",
 			Description: "Displays all held pokeballs",
 			Callback:    commandPokeballCount,
+		},
+		"add-farm": {
+			Name:        "add-farm",
+			Description: "Adds a Pokemon to the PokeFarm daycare",
+			Callback:    commandAddPokeFarm,
+		},
+		"farm-check": {
+			Name:        "farm-check",
+			Description: "Displays the current pokemon growth rate",
+			Callback:    commandCheckPokeFarm,
+		},
+		"rmv-farm": {
+			Name:        "rmv-farm",
+			Description: "Removes a Pokemon from the PokeFarm daycare",
+			Callback:    commandWithdrawPokeFarm,
 		},
 	}
 	return pokeball, pokedex, conf, commands

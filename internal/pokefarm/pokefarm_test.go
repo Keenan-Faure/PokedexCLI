@@ -19,7 +19,7 @@ func TestNewFarmPokemon(t *testing.T) {
 
 func TestCheckDuration(t *testing.T) {
 	fmt.Println("Test Case 1 - Pokemon Exists")
-	pokeFarm := CreatePokeFarm()
+	pokeFarm := CreatePokeFarm(5 * time.Second)
 	pokemon := fetch.Pokemon{
 		Name: "bulbasaur",
 	}
@@ -31,7 +31,7 @@ func TestCheckDuration(t *testing.T) {
 	}
 
 	fmt.Println("Test Case 2 - Pokemon Does not Exist")
-	pokeFarm = CreatePokeFarm()
+	pokeFarm = CreatePokeFarm(5 * time.Second)
 	pokemon = fetch.Pokemon{
 		Name: "catapie",
 	}
@@ -41,4 +41,83 @@ func TestCheckDuration(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected 'day care > we do not have that pokemon'")
 	}
+}
+
+func TestGetPokemon(t *testing.T) {
+	fmt.Println("Test Case 1 - Pokemon Exists")
+	pokeFarm := CreatePokeFarm(5 * time.Second)
+	pokemon := fetch.Pokemon{
+		Name: "bulbasaur",
+	}
+	pokeFarm.AddPokemon(pokemon)
+	_, ok := pokeFarm.GetPokemon("bulbasaur")
+	if ok != nil {
+		t.Errorf("Expected 'bulbasaur' but found ''")
+	}
+
+	fmt.Println("Test Case 2 - Pokemon does not exist")
+	pokeFarm = CreatePokeFarm(5 * time.Second)
+	pokemon = fetch.Pokemon{
+		Name: "charmander",
+	}
+	pokeFarm.AddPokemon(pokemon)
+	_, ok = pokeFarm.GetPokemon("bulbasaur")
+	if ok == nil {
+		t.Errorf("Expected '' but found 'bulbasaur'")
+	}
+}
+
+func TestAddPokemon(t *testing.T) {
+	fmt.Println("Test Case 1 - One pokemon added to farm")
+	farmPokemon := CreatePokeFarm(5 * time.Second)
+	pokemon := fetch.Pokemon{
+		Name: "charizard",
+	}
+	farmPokemon.AddPokemon(pokemon)
+	if len(farmPokemon.pokeFarm) != 1 {
+		t.Errorf("Expected '1' but found %d", len(farmPokemon.pokeFarm))
+	}
+}
+
+func TestWithdrawPokemon(t *testing.T) {
+	fmt.Println("Test Case 1 - Pokemon exists")
+	pokeFarm := CreatePokeFarm(5 * time.Second)
+	pokemon := fetch.Pokemon{
+		Name: "charmander",
+	}
+	pokeFarm.AddPokemon(pokemon)
+	_, err := pokeFarm.WithdrawPokemon(pokemon.Name)
+	if err != nil {
+		t.Errorf("Expected error NOT to be nil")
+	}
+	if len(pokeFarm.pokeFarm) == 1 {
+		t.Errorf("Expected '0' but found '1'")
+	}
+
+	fmt.Println("Test Case 2 - Pokemon does not exist")
+	pokeFarm = CreatePokeFarm(5 * time.Second)
+	pokemon = fetch.Pokemon{
+		Name: "charmander",
+	}
+	pokeFarm.AddPokemon(pokemon)
+	_, err = pokeFarm.WithdrawPokemon("bulbasaur")
+	if err == nil {
+		t.Errorf("Expected error to be nil")
+	}
+}
+
+func TestCalTotalExp(t *testing.T) {
+	pokeFarm := CreatePokeFarm(3 * time.Second)
+	pokemon := fetch.Pokemon{
+		Name:           "charmander",
+		BaseExperience: 65,
+	}
+	pokeFarm.AddPokemon(pokemon)
+	time.Sleep(3*time.Second + time.Millisecond)
+	exp := pokeFarm.calTotalExp("charmander")
+	if exp != (3 * 3) {
+		t.Errorf("Expected %d but found %d", (3 * 3), exp)
+	}
+	time.Sleep(6 * time.Second)
+	pokeFarm.CheckCurrExp()
 }

@@ -12,7 +12,7 @@ type CacheEntry struct {
 
 type Cache struct {
 	Mapper map[string]CacheEntry
-	Mux     *sync.Mutex
+	Mux    *sync.Mutex
 }
 
 func NewCache(interval time.Duration) Cache {
@@ -29,7 +29,7 @@ func (c *Cache) Add(key string, val []byte) {
 	defer c.Mux.Unlock()
 	c.Mapper[key] = CacheEntry{
 		createdAt: time.Now().UTC(),
-		val: val,
+		val:       val,
 	}
 }
 
@@ -37,7 +37,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, ok := c.Mapper[key]
-	if(ok) {
+	if ok {
 		return c.Mapper[key].val, true
 	}
 	return nil, false
@@ -48,7 +48,7 @@ func (c *Cache) reap(interval time.Duration) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, value := range c.Mapper {
-		if(value.createdAt.Before(timeAgo)) {
+		if value.createdAt.Before(timeAgo) {
 			delete(c.Mapper, key)
 		}
 	}
