@@ -24,7 +24,8 @@ type cliCommand struct {
 		pokedex *pokedex.Pokedex,
 		pokeballs *pokeball.Pokeball,
 		pokefarm *pokefarm.PokeFarm,
-		pokeparty *pokeparty.PokeParty) error
+		pokeparty *pokeparty.PokeParty,
+		pokeseen *fetch.SeenPoke) error
 }
 
 func commandChkPokeParty(
@@ -35,7 +36,8 @@ func commandChkPokeParty(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	pokeparty.CheckPartyPokemon()
 	return nil
 }
@@ -48,7 +50,8 @@ func commandTransferPokemon(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	pokemon, err := pokeparty.TransferPokemon(name)
 	if err != nil {
 		return err
@@ -67,7 +70,8 @@ func commandWithdrawPokeFarm(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	_, err := pokefarm.WithdrawPokemon(name)
 	if err != nil {
 		return nil
@@ -83,7 +87,8 @@ func commandCheckPokeFarm(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	pokefarm.CheckCurrExp()
 	return nil
 }
@@ -96,7 +101,8 @@ func commandAddPokeFarm(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	pokemon, exist := pokedex.GetPokemon(name)
 	if !exist {
 		return errors.New("you have not caught " + name)
@@ -114,7 +120,8 @@ func commandPokeballCount(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	fmt.Println("Available Pokeballs are: ")
 	for key, value := range pokeballs.PokeBalls {
 		fmt.Println(" - ", key, ": ", value)
@@ -130,9 +137,14 @@ func commandPokedex(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
-	for _, value := range pokedex.Mapper {
-		fmt.Println(" - ", value.Name)
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
+	if len(pokedex.Mapper) > 0 {
+		for _, value := range pokedex.Mapper {
+			fmt.Println(" - ", value.Name)
+		}
+	} else {
+		fmt.Println("You have caught no pokemon")
 	}
 	return nil
 }
@@ -145,7 +157,8 @@ func commandInspect(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	if name != "" {
 		value, exist := pokedex.GetPokemon(name)
 		if !exist {
@@ -175,8 +188,13 @@ func commandCatch(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	if name != "" {
+		_, err := pokeseen.GetPokemon(name)
+		if err != nil {
+			return err
+		}
 		pokemon, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/"+name, conf, cache)
 		if err != nil {
 			return err
@@ -218,7 +236,8 @@ func commandExplore(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	resp, err := fetch.GETExplore("https://pokeapi.co/api/v2/location-area/"+name, conf, cache)
 	if err != nil {
 		return err
@@ -227,6 +246,7 @@ func commandExplore(
 	fmt.Println("Found Pokemon:")
 	for value := range resp.PokemonEncounters {
 		fmt.Println(" - ", resp.PokemonEncounters[value].Pokemon.Name)
+		pokeseen.AddPokemon(resp.PokemonEncounters[value].Pokemon.Name)
 	}
 	return nil
 }
@@ -239,7 +259,8 @@ func commandHelp(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	fmt.Println("Welcome to Pokemon!")
 	fmt.Println("Usage:")
 	fmt.Println("Format:")
@@ -271,7 +292,8 @@ func commandPokedexCount(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	fmt.Println(len(pokedex.Mapper))
 	return nil
 }
@@ -284,7 +306,8 @@ func commandExit(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	os.Exit(0)
 	return nil
 }
@@ -297,7 +320,8 @@ func commandMap(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	incrementConf(conf)
 	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
 	if err != nil {
@@ -316,7 +340,8 @@ func commandMapb(
 	pokedex *pokedex.Pokedex,
 	pokeballs *pokeball.Pokeball,
 	pokefarm *pokefarm.PokeFarm,
-	pokeparty *pokeparty.PokeParty) error {
+	pokeparty *pokeparty.PokeParty,
+	pokeseen *fetch.SeenPoke) error {
 	err := decrementConf(conf)
 	if err != nil {
 		return err
@@ -333,17 +358,17 @@ func commandMapb(
 
 // helper functions
 func incrementConf(conf *fetch.Config_params) error {
-	conf.Offset = conf.Offset + 20
+	conf.Offset = conf.Offset + 5
 	return nil
 }
 
 func decrementConf(conf *fetch.Config_params) error {
 	if conf.Offset == 0 {
 		return errors.New("pagination error")
-	} else if conf.Offset == -20 {
+	} else if conf.Offset == -5 {
 		return errors.New("pagination error")
 	} else {
-		conf.Offset = conf.Offset - 20
+		conf.Offset = conf.Offset - 5
 	}
 	return nil
 }
@@ -352,8 +377,8 @@ func Init() (pokeball.Pokeball, pokedex.Pokedex, fetch.Config_params, map[string
 	pokeball := pokeball.InitPokeBalls()
 	pokedex := pokedex.CreatePokedex()
 	conf := fetch.Config_params{
-		Offset: -20,
-		Limit:  20,
+		Offset: -5,
+		Limit:  5,
 	}
 	commands := map[string]cliCommand{
 		"help": {

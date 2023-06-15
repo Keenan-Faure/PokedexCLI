@@ -53,3 +53,68 @@ func TestAddParams(t *testing.T) {
 		t.Errorf("Expected '' but found " + actual)
 	}
 }
+
+func TestAddPokemon(t *testing.T) {
+	fmt.Println("Test Case 1 - Length of 1")
+	seenPoke := CreateSeenPoke()
+	pokemon := "bulbasaur"
+	seenPoke.AddPokemon(pokemon)
+	if len(seenPoke.seenPoke) != 1 {
+		t.Errorf("Expected '1' but found %d", len(seenPoke.seenPoke))
+	}
+
+	fmt.Println("Test Case 2 - Adding the same Pokemon")
+	seenPoke = CreateSeenPoke()
+	pokemon = "bulbasaur"
+	seenPoke.AddPokemon(pokemon)
+	seenPoke.AddPokemon(pokemon)
+	if len(seenPoke.seenPoke) != 1 {
+		t.Errorf("Expected '1' but found %d", len(seenPoke.seenPoke))
+	}
+
+	fmt.Println("Test Case 3 - Adding 3 different Pokemon")
+	seenPoke = CreateSeenPoke()
+	pokemon = "bulbasaur"
+	pokemon2 := "charmander"
+	pokemon3 := "chimchar"
+	seenPoke.AddPokemon(pokemon)
+	seenPoke.AddPokemon(pokemon2)
+	seenPoke.AddPokemon(pokemon3)
+	if len(seenPoke.seenPoke) != 3 {
+		t.Errorf("Expected '1' but found %d", len(seenPoke.seenPoke))
+	}
+}
+
+func TestGetSeenPoke(t *testing.T) {
+	fmt.Println("Test Case 1 - Pokemon exists")
+	seenPoke := CreateSeenPoke()
+	pokemon := "bulbasaur"
+	seenPoke.AddPokemon(pokemon)
+	_, exist := seenPoke.GetPokemon("bulbasaur")
+	if exist != nil {
+		t.Errorf("Expected nil but found error")
+	}
+
+	fmt.Println("Test Case 2 - Pokemon does not exist")
+	seenPoke = CreateSeenPoke()
+	_, exist = seenPoke.GetPokemon("bulbasaur")
+	if exist == nil {
+		t.Errorf("Expected error but found none")
+	}
+}
+
+func TestCountSeen(t *testing.T) {
+	fmt.Println("Test Case 1 - len 1")
+	seenPoke := CreateSeenPoke()
+	pokemon := "bulbasaur"
+	seenPoke.AddPokemon(pokemon)
+	if seenPoke.CountSeenPokemon() != 1 {
+		t.Errorf("Expected '1' but found %d", seenPoke.CountSeenPokemon())
+	}
+
+	fmt.Println("Test Case 1 - len 0")
+	seenPoke = CreateSeenPoke()
+	if seenPoke.CountSeenPokemon() != 0 {
+		t.Errorf("Expected '0' but found %d", seenPoke.CountSeenPokemon())
+	}
+}

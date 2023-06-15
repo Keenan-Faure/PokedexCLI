@@ -9,10 +9,13 @@ import (
 )
 
 const baseExp = 3
+const expFirstForm = 150
+const expSecondFrom = 400
 
 type FarmPokemon struct {
 	pokemon fetch.Pokemon
-	baseExp int
+	form    int
+	baseExp int // 0=> initial | 1=>first | 2=>second
 	time    time.Time
 }
 
@@ -97,7 +100,6 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration) {
 	for _, value := range p.pokeFarm {
 		if entry, ok := p.pokeFarm[value.pokemon.Name]; ok {
 			entry.baseExp = p.calTotalExp(value.pokemon.Name)
-			p.pokeFarm[value.pokemon.Name] = entry
 		}
 	}
 }

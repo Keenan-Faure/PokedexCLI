@@ -7,11 +7,45 @@ import (
 	"io"
 	"net/http"
 	"pokecache"
+	"sync"
 )
 
 type Config_params struct {
 	Offset int
 	Limit  int
+}
+
+type SeenPoke struct {
+	seenPoke map[string]string
+	Mux      *sync.Mutex
+}
+
+func CreateSeenPoke() SeenPoke {
+	seenPoke := SeenPoke{
+		seenPoke: make(map[string]string),
+		Mux:      &sync.Mutex{},
+	}
+	return seenPoke
+}
+
+func (sp *SeenPoke) GetPokemon(pokemonName string) (string, error) {
+	sp.Mux.Lock()
+	defer sp.Mux.Unlock()
+	pokemon, exist := sp.seenPoke[pokemonName]
+	if exist {
+		return pokemon, nil
+	}
+	return "", errors.New("never seen a " + pokemonName + " yet\nplease explore your world...")
+}
+
+func (sp *SeenPoke) AddPokemon(pokemonName string) {
+	sp.Mux.Lock()
+	defer sp.Mux.Unlock()
+	sp.seenPoke[pokemonName] = pokemonName
+}
+
+func (sp *SeenPoke) CountSeenPokemon() int {
+	return len(sp.seenPoke)
 }
 
 func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error) {
@@ -108,6 +142,8 @@ func GETPokemon(url string, query_params *Config_params, cache pokecache.Cache) 
 	return Pokemon{}, errors.New("undefined url")
 }
 
+// helper function
+// Adds the params to the url if it exists
 func AddParams(url string, query_params *Config_params) string {
 	if url != "" {
 		url = url + "?"

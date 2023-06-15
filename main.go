@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"clicmd"
+	"fetch"
 	"fmt"
 	"os"
 	"pokecache"
@@ -17,6 +18,7 @@ const cacheDuration = 15 * time.Second
 const pokeFarmInterval = 5 * time.Second
 
 func main() {
+	pokeseen := fetch.CreateSeenPoke()
 	pokeparty := pokeparty.CreatePokeParty()
 	pokefarm := pokefarm.CreatePokeFarm(pokeFarmInterval)
 	pokeballs, pokedex, conf, commands := clicmd.Init()
@@ -43,6 +45,7 @@ func main() {
 				&pokeballs,
 				&pokefarm,
 				&pokeparty,
+				&pokeseen,
 			)
 			if err != nil {
 				fmt.Println(err.Error())
