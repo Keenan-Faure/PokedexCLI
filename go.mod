@@ -10,4 +10,6 @@ replace internal/clicmd => ./internal/clicmd
 
 replace internal/pokefarm => ./internal/pokefarm
 
+replace internal/pokeparty => ./internal/pokeparty
+
 go 1.20
