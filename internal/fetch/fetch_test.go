@@ -118,3 +118,32 @@ func TestCountSeen(t *testing.T) {
 		t.Errorf("Expected '0' but found %d", seenPoke.CountSeenPokemon())
 	}
 }
+
+func TestGETEvolID(t *testing.T) {
+	fmt.Println("Test Case 1 - Legendary Pokemon no next phase")
+	const interval = 7 * time.Second
+	cache := pokecache.NewCache(interval)
+	pokemon := "rayquaza"
+	url := "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
+	params := Config_params{
+		Offset: 5,
+		Limit:  10,
+	}
+	response_poke, _ := GETEvolID(url, pokemon, &params, cache)
+	if response_poke.Name != pokemon {
+		t.Errorf("Expected %s but found %s", pokemon, response_poke.Name)
+	}
+
+	fmt.Println("Test Case 2 - Pokemon has next phase")
+	cache = pokecache.NewCache(interval)
+	pokemon = "pikachu"
+	url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
+	params = Config_params{
+		Offset: 5,
+		Limit:  10,
+	}
+	response_poke, _ = GETEvolID(url, pokemon, &params, cache)
+	if response_poke.Name == pokemon {
+		t.Errorf("Expected %s but found %s", response_poke.Name, pokemon)
+	}
+}

@@ -142,6 +142,56 @@ func GETPokemon(url string, query_params *Config_params, cache pokecache.Cache) 
 	return Pokemon{}, errors.New("undefined url")
 }
 
+func GETEvolID(url string, pokemonName string, query_params *Config_params, cache pokecache.Cache) (Pokemon, error) {
+	if url != "" {
+		resp, err := http.Get(url)
+		if err != nil {
+			return Pokemon{}, err
+		}
+		defer resp.Body.Close()
+		body, err_ := io.ReadAll(resp.Body)
+		if err_ != nil {
+			return Pokemon{}, err
+		}
+		result := PokeSpecies{}
+		err_r := json.Unmarshal(body, &result)
+		if err_r != nil {
+			return Pokemon{}, err_r
+		}
+		evol, error_r := GETNextEvolution(result.EvolutionChain.URL, pokemonName, query_params)
+		if error_r != nil {
+			return Pokemon{}, err
+		}
+		next_form, err := GETPokemon(evol, query_params, cache)
+		if err != nil {
+			return Pokemon{}, err
+		}
+		return next_form, nil
+	}
+	return Pokemon{}, errors.New("undefined url")
+}
+
+func GETNextEvolution(url string, pokemonName string, query_params *Config_params) (string, error) {
+	if url != "" {
+		resp, err := http.Get(url)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+		body, err_ := io.ReadAll(resp.Body)
+		if err_ != nil {
+			return "", err
+		}
+		result := PokeEvolve{}
+		err_r := json.Unmarshal(body, &result)
+		if err_r != nil {
+			return "", err_r
+		}
+		return evolution(pokemonName, result), nil
+	}
+	return "", errors.New("undefined url")
+}
+
 // helper function
 // Adds the params to the url if it exists
 func AddParams(url string, query_params *Config_params) string {
@@ -154,4 +204,27 @@ func AddParams(url string, query_params *Config_params) string {
 		return url
 	}
 	return url
+}
+
+// determines which evolution form
+// the POKeMON will advance towards
+// returns a url that should be fetched
+func evolution(pokemonName string, evolveMap PokeEvolve) string {
+	//is it a first form
+	if pokemonName == evolveMap.Chain.Species.Name {
+		//move on to second form
+		if len(evolveMap.Chain.EvolvesTo) > 0 {
+			return "https://pokeapi.co/api/v2/pokemon/" + evolveMap.Chain.EvolvesTo[0].Species.Name
+		}
+		return "https://pokeapi.co/api/v2/pokemon/" + pokemonName
+	} else if pokemonName == evolveMap.Chain.EvolvesTo[0].Species.Name {
+		//second form
+		if len(evolveMap.Chain.EvolvesTo[0].EvolvesTo) > 0 {
+			return "https://pokeapi.co/api/v2/pokemon/" + evolveMap.Chain.EvolvesTo[0].EvolvesTo[0].Species.Name
+		}
+		return "https://pokeapi.co/api/v2/pokemon/" + pokemonName
+	} else {
+		//single form pokemon
+		return "https://pokeapi.co/api/v2/pokemon/" + pokemonName
+	}
 }

@@ -4,17 +4,17 @@ import (
 	"errors"
 	"fetch"
 	"fmt"
+	"pokecache"
 	"sync"
 	"time"
 )
 
-const baseExp = 3
+const baseExp = 10
 const expFirstForm = 150
 const expSecondFrom = 400
 
 type FarmPokemon struct {
 	pokemon fetch.Pokemon
-	form    int
 	baseExp int // 0=> initial | 1=>first | 2=>second
 	time    time.Time
 }
@@ -98,18 +98,37 @@ func (p *PokeFarm) expLoop(interval time.Duration) {
 
 func (p *PokeFarm) addExpToFarm(interval time.Duration) {
 	for _, value := range p.pokeFarm {
+		url := "https://pokeapi.co/api/v2/pokemon-species/" + value.pokemon.Name
 		if entry, ok := p.pokeFarm[value.pokemon.Name]; ok {
 			entry.baseExp = p.calTotalExp(value.pokemon.Name)
+			if entry.baseExp > expFirstForm {
+				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, pokecache.Cache{})
+				if err == nil {
+					pokemon, err := p.GetPokemon(entry.pokemon.Name)
+					if err == nil {
+						p.Mux.Lock()
+						defer p.Mux.Unlock()
+						delete(p.pokeFarm, pokemon.pokemon.Name)
+						p.AddPokemon(poke_result)
+					}
+				}
+			} else if entry.baseExp > expSecondFrom {
+				fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, pokecache.Cache{})
+			}
 		}
 	}
 }
 
 func (p *PokeFarm) CheckCurrExp() {
-	fmt.Println("Current Pokemon on PokeFarm: ")
-	p.Mux.Lock()
-	defer p.Mux.Unlock()
-	for _, value := range p.pokeFarm {
-		fmt.Printf("%s	|	%d", value.pokemon.Name, value.baseExp)
-		fmt.Println("")
+	if len(p.pokeFarm) > 0 {
+		fmt.Println("Current Pokemon on PokeFarm: ")
+		p.Mux.Lock()
+		defer p.Mux.Unlock()
+		for _, value := range p.pokeFarm {
+			fmt.Printf("%s	|	%d", value.pokemon.Name, value.baseExp)
+			fmt.Println("")
+		}
+	} else {
+		fmt.Println("No pokemon at PokeFarm...")
 	}
 }
