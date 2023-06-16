@@ -19,10 +19,10 @@ const pokeFarmInterval = 5 * time.Second
 
 func main() {
 	pokeseen := fetch.CreateSeenPoke()
-	pokeparty := pokeparty.CreatePokeParty()
-	pokefarm := pokefarm.CreatePokeFarm(pokeFarmInterval)
-	pokeballs, pokedex, conf, commands := clicmd.Init()
 	cache := pokecache.NewCache(cacheDuration)
+	pokeparty := pokeparty.CreatePokeParty()
+	pokefarm := pokefarm.CreatePokeFarm(pokeFarmInterval, cache)
+	pokeballs, pokedex, conf, commands := clicmd.Init()
 	fmt.Print("Pokemon > ")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

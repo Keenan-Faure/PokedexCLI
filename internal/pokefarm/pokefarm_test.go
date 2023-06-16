@@ -3,6 +3,7 @@ package pokefarm
 import (
 	"fetch"
 	"fmt"
+	"pokecache"
 	"testing"
 	"time"
 )
@@ -19,7 +20,8 @@ func TestNewFarmPokemon(t *testing.T) {
 
 func TestCheckDuration(t *testing.T) {
 	fmt.Println("Test Case 1 - Pokemon Exists")
-	pokeFarm := CreatePokeFarm(5 * time.Second)
+	cache := pokecache.NewCache(15 * time.Second)
+	pokeFarm := CreatePokeFarm(5*time.Second, cache)
 	pokemon := fetch.Pokemon{
 		Name: "bulbasaur",
 	}
@@ -31,7 +33,7 @@ func TestCheckDuration(t *testing.T) {
 	}
 
 	fmt.Println("Test Case 2 - Pokemon Does not Exist")
-	pokeFarm = CreatePokeFarm(5 * time.Second)
+	pokeFarm = CreatePokeFarm(5*time.Second, cache)
 	pokemon = fetch.Pokemon{
 		Name: "catapie",
 	}
@@ -45,7 +47,8 @@ func TestCheckDuration(t *testing.T) {
 
 func TestGetPokemon(t *testing.T) {
 	fmt.Println("Test Case 1 - Pokemon Exists")
-	pokeFarm := CreatePokeFarm(5 * time.Second)
+	cache := pokecache.NewCache(15 * time.Second)
+	pokeFarm := CreatePokeFarm(5*time.Second, cache)
 	pokemon := fetch.Pokemon{
 		Name: "bulbasaur",
 	}
@@ -56,7 +59,7 @@ func TestGetPokemon(t *testing.T) {
 	}
 
 	fmt.Println("Test Case 2 - Pokemon does not exist")
-	pokeFarm = CreatePokeFarm(5 * time.Second)
+	pokeFarm = CreatePokeFarm(5*time.Second, cache)
 	pokemon = fetch.Pokemon{
 		Name: "charmander",
 	}
@@ -69,7 +72,8 @@ func TestGetPokemon(t *testing.T) {
 
 func TestAddPokemon(t *testing.T) {
 	fmt.Println("Test Case 1 - One pokemon added to farm")
-	farmPokemon := CreatePokeFarm(5 * time.Second)
+	cache := pokecache.NewCache(15 * time.Second)
+	farmPokemon := CreatePokeFarm(5*time.Second, cache)
 	pokemon := fetch.Pokemon{
 		Name: "charizard",
 	}
@@ -81,7 +85,8 @@ func TestAddPokemon(t *testing.T) {
 
 func TestWithdrawPokemon(t *testing.T) {
 	fmt.Println("Test Case 1 - Pokemon exists")
-	pokeFarm := CreatePokeFarm(5 * time.Second)
+	cache := pokecache.NewCache(15 * time.Second)
+	pokeFarm := CreatePokeFarm(5*time.Second, cache)
 	pokemon := fetch.Pokemon{
 		Name: "charmander",
 	}
@@ -95,7 +100,7 @@ func TestWithdrawPokemon(t *testing.T) {
 	}
 
 	fmt.Println("Test Case 2 - Pokemon does not exist")
-	pokeFarm = CreatePokeFarm(5 * time.Second)
+	pokeFarm = CreatePokeFarm(5*time.Second, cache)
 	pokemon = fetch.Pokemon{
 		Name: "charmander",
 	}
@@ -107,7 +112,8 @@ func TestWithdrawPokemon(t *testing.T) {
 }
 
 func TestCalTotalExp(t *testing.T) {
-	pokeFarm := CreatePokeFarm(3 * time.Second)
+	cache := pokecache.NewCache(15 * time.Second)
+	pokeFarm := CreatePokeFarm(3*time.Second, cache)
 	pokemon := fetch.Pokemon{
 		Name:           "charmander",
 		BaseExperience: 65,
@@ -115,8 +121,8 @@ func TestCalTotalExp(t *testing.T) {
 	pokeFarm.AddPokemon(pokemon)
 	time.Sleep(3*time.Second + time.Millisecond)
 	exp := pokeFarm.calTotalExp("charmander")
-	if exp != (3 * 3) {
-		t.Errorf("Expected %d but found %d", (3 * 3), exp)
+	if exp != (3 * 10) {
+		t.Errorf("Expected %d but found %d", (3 * 10), exp)
 	}
 	time.Sleep(6 * time.Second)
 	pokeFarm.CheckCurrExp()

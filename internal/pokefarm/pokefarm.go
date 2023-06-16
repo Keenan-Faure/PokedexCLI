@@ -24,12 +24,12 @@ type PokeFarm struct {
 	Mux      *sync.Mutex
 }
 
-func CreatePokeFarm(interval time.Duration) PokeFarm {
+func CreatePokeFarm(interval time.Duration, cache pokecache.Cache) PokeFarm {
 	pokeFarm := PokeFarm{
 		pokeFarm: make(map[string]FarmPokemon),
 		Mux:      &sync.Mutex{},
 	}
-	go pokeFarm.expLoop(interval)
+	go pokeFarm.expLoop(interval, cache)
 	return pokeFarm
 }
 
@@ -89,20 +89,22 @@ func (p *PokeFarm) WithdrawPokemon(pokemonName string) (fetch.Pokemon, error) {
 	return pokemon.pokemon, nil
 }
 
-func (p *PokeFarm) expLoop(interval time.Duration) {
+func (p *PokeFarm) expLoop(interval time.Duration, cache pokecache.Cache) {
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
-		p.addExpToFarm(interval)
+		p.addExpToFarm(interval, cache)
 	}
 }
 
-func (p *PokeFarm) addExpToFarm(interval time.Duration) {
+func (p *PokeFarm) addExpToFarm(interval time.Duration, cache pokecache.Cache) {
 	for _, value := range p.pokeFarm {
 		url := "https://pokeapi.co/api/v2/pokemon-species/" + value.pokemon.Name
 		if entry, ok := p.pokeFarm[value.pokemon.Name]; ok {
 			entry.baseExp = p.calTotalExp(value.pokemon.Name)
+			fmt.Println("I am here")
+			fmt.Println(entry.pokemon.Name)
 			if entry.baseExp > expFirstForm {
-				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, pokecache.Cache{})
+				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 				if err == nil {
 					pokemon, err := p.GetPokemon(entry.pokemon.Name)
 					if err == nil {
@@ -113,7 +115,7 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration) {
 					}
 				}
 			} else if entry.baseExp > expSecondFrom {
-				fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, pokecache.Cache{})
+				fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 			}
 		}
 	}

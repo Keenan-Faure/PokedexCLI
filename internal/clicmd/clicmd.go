@@ -205,7 +205,7 @@ func commandCatch(
 		}
 		_, exist := pokedex.GetPokemon(name)
 		if exist {
-			return errors.New("noo! I already have a " + pokemon.Name + " I dont need two.")
+			return errors.New("noo! I already have a " + pokemon.Name + " I dont need two...")
 		}
 		fmt.Println("Throwing a ", pokeball, "at ", name, "...")
 		baseExperience := pokemon.BaseExperience
@@ -270,15 +270,14 @@ func commandHelp(
 	fmt.Println("exit                                   : Exit the Pokedex")
 	fmt.Println("map                                    : Displays the names of 20 location areas")
 	fmt.Println("mapb                                   : Displays the previous 20 location areas")
-	fmt.Println("pokecount                              : Displays the amount of pokemon caught")
 	fmt.Println("explore      <area-name>               : Displays the Pokemon available in the specific area")
 	fmt.Println("catch        <pokemon-name> <pokeball> : Attempts to Catch a pokemon using a pokeball")
 	fmt.Println("inspect      <pokemon>                 : Inspect a caught pokemon's details")
 	fmt.Println("pokedex                                : Displays caught pokemon")
-	fmt.Println("pokeballs                              : Displays all held pokeballs")
+	fmt.Println("poke-count                             : Displays the amount of pokemon caught")
+	fmt.Println("poke-balls                             : Displays all held pokeballs")
 	fmt.Println("farm-check                             : Displays the current pokemon growth rate")
-	fmt.Println("add-farm     <pokemon-name>            : Adds a Pokemon to the PokeFarm daycare")
-	fmt.Println("rmv-farm     <pokemon-name>            : Removes a Pokemon from the PokeFarm daycare")
+	fmt.Println("farm-remove     <pokemon-name>         : Removes a Pokemon from the PokeFarm daycare")
 	fmt.Println("party-check                            : Checks the pokemon in your party")
 	fmt.Println("party-move   <pokemon-name>            : Removes a pokemon from your party and adds it to the Daycare")
 	return nil

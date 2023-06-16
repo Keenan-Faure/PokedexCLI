@@ -31,7 +31,7 @@ func (p *PokeParty) GetPokemon(pokemonName string) (fetch.Pokemon, error) {
 }
 
 func (p *PokeParty) AddPokemon(pokemon fetch.Pokemon) bool {
-	if len(p.pokeParty) >= 6 {
+	if len(p.pokeParty) >= 5 {
 		fmt.Println("======")
 		fmt.Println("Your party is currently full")
 		fmt.Println("Tranferrring pokemon", pokemon.Name, "to pokefarm")
