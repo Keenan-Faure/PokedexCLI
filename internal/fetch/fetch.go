@@ -160,7 +160,7 @@ func GETEvolID(url string, pokemonName string, query_params *Config_params, cach
 		}
 		evol, error_r := GETNextEvolution(result.EvolutionChain.URL, pokemonName, query_params)
 		if error_r != nil {
-			return Pokemon{}, err
+			return Pokemon{}, error_r
 		}
 		next_form, err := GETPokemon(evol, query_params, cache)
 		if err != nil {
@@ -186,6 +186,10 @@ func GETNextEvolution(url string, pokemonName string, query_params *Config_param
 		err_r := json.Unmarshal(body, &result)
 		if err_r != nil {
 			return "", err_r
+		}
+		returns := evolution(pokemonName, result)
+		if returns == "https://pokeapi.co/api/v2/pokemon/"+pokemonName {
+			return "", errors.New("Pokemon cannot evolve again")
 		}
 		return evolution(pokemonName, result), nil
 	}

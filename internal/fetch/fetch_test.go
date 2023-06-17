@@ -129,9 +129,9 @@ func TestGETEvolID(t *testing.T) {
 		Offset: 5,
 		Limit:  10,
 	}
-	response_poke, _ := GETEvolID(url, pokemon, &params, cache)
-	if response_poke.Name != pokemon {
-		t.Errorf("Expected %s but found %s", pokemon, response_poke.Name)
+	response_poke, err := GETEvolID(url, pokemon, &params, cache)
+	if err == nil {
+		t.Errorf("Expected error but found none")
 	}
 
 	fmt.Println("Test Case 2 - Pokemon has next phase")

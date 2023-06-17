@@ -15,7 +15,7 @@ const expSecondFrom = 400
 
 type FarmPokemon struct {
 	pokemon fetch.Pokemon
-	baseExp int // 0=> initial | 1=>first | 2=>second
+	baseExp int
 	time    time.Time
 }
 
@@ -123,7 +123,6 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration, cache pokecache.Cache) {
 						p.WithdrawPokemon(pokemon.pokemon.Name)
 						fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
 						p.AddPokemon(poke_result)
-						//not adding new pokemon into PokeFarm
 						//pokemon should not evolve into pokemon again
 					}
 				}
