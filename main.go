@@ -13,9 +13,8 @@ import (
 	"time"
 )
 
-// 15 seconds cache
 const cacheDuration = 15 * time.Second
-const pokeFarmInterval = 5 * time.Second
+const pokeFarmInterval = 20 * time.Second
 
 func main() {
 	pokeseen := fetch.CreateSeenPoke()

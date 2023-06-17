@@ -72,10 +72,12 @@ func commandWithdrawPokeFarm(
 	pokefarm *pokefarm.PokeFarm,
 	pokeparty *pokeparty.PokeParty,
 	pokeseen *fetch.SeenPoke) error {
-	_, err := pokefarm.WithdrawPokemon(name)
+	pokemon, err := pokefarm.TransferPokemon(name)
 	if err != nil {
 		return nil
 	}
+	pokeparty.AddPokemon(pokemon)
+	fmt.Println("Added", name, "to party")
 	return nil
 }
 
@@ -213,6 +215,7 @@ func commandCatch(
 		catchChance := pokeballs.IncreaseChance(pokeball, baseExperience, rngNumber)
 		if catchChance > baseExperience {
 			fmt.Println(name, "was caught!")
+			fmt.Println(name, "was added to your party!")
 			pokedex.AddPokemon(pokemon)
 			fmt.Println("You may now inspect it with the inspect command.")
 			result := pokeparty.AddPokemon(pokemon)
@@ -238,6 +241,11 @@ func commandExplore(
 	pokefarm *pokefarm.PokeFarm,
 	pokeparty *pokeparty.PokeParty,
 	pokeseen *fetch.SeenPoke) error {
+	if name == "" {
+		fmt.Println("No area selected")
+		fmt.Println("TIP: enter 'map'")
+		return nil
+	}
 	resp, err := fetch.GETExplore("https://pokeapi.co/api/v2/location-area/"+name, conf, cache)
 	if err != nil {
 		return err
@@ -262,7 +270,6 @@ func commandHelp(
 	pokeparty *pokeparty.PokeParty,
 	pokeseen *fetch.SeenPoke) error {
 	fmt.Println("Welcome to Pokemon!")
-	fmt.Println("Usage:")
 	fmt.Println("Format:")
 	fmt.Println("command <param1> <param2>              : Description")
 	fmt.Println("")
@@ -277,7 +284,7 @@ func commandHelp(
 	fmt.Println("poke-count                             : Displays the amount of pokemon caught")
 	fmt.Println("poke-balls                             : Displays all held pokeballs")
 	fmt.Println("farm-check                             : Displays the current pokemon growth rate")
-	fmt.Println("farm-remove     <pokemon-name>         : Removes a Pokemon from the PokeFarm daycare")
+	fmt.Println("farm-move     <pokemon-name>           : Removes a Pokemon from the PokeFarm and adds it to the party")
 	fmt.Println("party-check                            : Checks the pokemon in your party")
 	fmt.Println("party-move   <pokemon-name>            : Removes a pokemon from your party and adds it to the Daycare")
 	return nil
@@ -440,9 +447,9 @@ func Init() (pokeball.Pokeball, pokedex.Pokedex, fetch.Config_params, map[string
 			Description: "Displays the current pokemon growth rate",
 			Callback:    commandCheckPokeFarm,
 		},
-		"rmv-farm": {
-			Name:        "rmv-farm",
-			Description: "Removes a Pokemon from the PokeFarm daycare",
+		"farm-move": {
+			Name:        "farm-move",
+			Description: "Removes a Pokemon from the PokeFarm and adds it to the party",
 			Callback:    commandWithdrawPokeFarm,
 		},
 		"party-check": {

@@ -9,9 +9,12 @@ import (
 	"time"
 )
 
-const baseExp = 10
-const expFirstForm = 150
-const expSecondFrom = 400
+//create farm logger
+//reports on the status of the farm
+
+const baseExp = 5          //exp received every second
+const expFirstForm = 1050  //exp required to evolve to 1st form
+const expSecondFrom = 2500 //exp required to evolve to 2nd form
 
 type FarmPokemon struct {
 	pokemon fetch.Pokemon
@@ -84,9 +87,20 @@ func (p *PokeFarm) WithdrawPokemon(pokemonName string) (fetch.Pokemon, error) {
 	p.Mux.Lock()
 	defer p.Mux.Unlock()
 	delete(p.pokeFarm, pokemon.pokemon.Name)
-	fmt.Println("Successfully withdrew ", pokemonName)
-	fmt.Println(pokemonName, " has ", pokemon.baseExp, " experience")
 	return pokemon.pokemon, nil
+}
+
+func (p *PokeFarm) TransferPokemon(pokemonName string) (fetch.Pokemon, error) {
+	_, err := p.GetPokemon(pokemonName)
+	if err != nil {
+		return fetch.Pokemon{}, err
+	}
+	pokemon, err := p.WithdrawPokemon(pokemonName)
+	if err != nil {
+		return fetch.Pokemon{}, err
+	}
+	fmt.Println("Withdrew", pokemonName, "from pokefarm")
+	return pokemon, nil
 }
 
 func (p *PokeFarm) expLoop(interval time.Duration, cache pokecache.Cache) {
@@ -101,12 +115,11 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration, cache pokecache.Cache) {
 		url := "https://pokeapi.co/api/v2/pokemon-species/" + value.pokemon.Name
 		if entry, ok := p.pokeFarm[value.pokemon.Name]; ok {
 			entry.baseExp = p.calTotalExp(value.pokemon.Name)
-			fmt.Println(entry.baseExp)
-			fmt.Println(entry.pokemon.Name)
+			p.pokeFarm[value.pokemon.Name] = entry
 			if entry.baseExp > expSecondFrom {
-				fmt.Println(entry.pokemon.Name + " is evolving...")
 				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 				if err == nil {
+					fmt.Println(entry.pokemon.Name + " is evolving...")
 					pokemon, err := p.GetPokemon(entry.pokemon.Name)
 					if err == nil {
 						p.WithdrawPokemon(pokemon.pokemon.Name)
@@ -115,15 +128,14 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration, cache pokecache.Cache) {
 					}
 				}
 			} else if entry.baseExp > expFirstForm {
-				fmt.Println(entry.pokemon.Name + " is evolving...")
 				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 				if err == nil {
+					fmt.Println(entry.pokemon.Name + " is evolving...")
 					pokemon, err := p.GetPokemon(entry.pokemon.Name)
 					if err == nil {
 						p.WithdrawPokemon(pokemon.pokemon.Name)
 						fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
 						p.AddPokemon(poke_result)
-						//pokemon should not evolve into pokemon again
 					}
 				}
 			}
