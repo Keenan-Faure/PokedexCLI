@@ -49,6 +49,8 @@ func (sp *SeenPoke) CountSeenPokemon() int {
 }
 
 func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error) {
+	//check type of parameter and return respective value
+	//perhaps store it inside an array for EOA
 	if url != "" {
 		url = AddParams(url, query_params)
 		cachedValue, exists := cache.Get(url)
