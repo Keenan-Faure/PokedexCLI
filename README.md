@@ -1,10 +1,9 @@
-# PokedexCLI
+# PokemonCLI
 
-A Pokedex in a command-line REPL using the [PokéAPI](https://pokeapi.co)
+A Pokemon game in a command-line REPL using the [PokéAPI](https://pokeapi.co)
 
 This project takes the following into consideration:
 
--
 -   Parsing JSON in Go
 -   Making HTTP requests in Go
 -   Build a CLI tool that makes interacting with a back-end server easier
@@ -18,7 +17,7 @@ Download the code from Github repository :)
 
 ## How to run
 
-Once you navigated to the folder containing the (extracted) repository enter:
+Once you navigated to the folder containing the (extracted) repository in your command line enter:
 
 ```
 go build && ./pokemon
@@ -59,4 +58,4 @@ const expFirstForm = 1050  //exp required to evolve to 1st form
 const expSecondFrom = 2500 //exp required to evolve to 2nd form
 ```
 
-Thank you for reading :)
+Thank you for reading 👹
