@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-//create farm logger
-//reports on the status of the farm
-
 const baseExp = 5          //exp received every second
 const expFirstForm = 1050  //exp required to evolve to 1st form
 const expSecondFrom = 2500 //exp required to evolve to 2nd form
@@ -119,22 +116,22 @@ func (p *PokeFarm) addExpToFarm(interval time.Duration, cache pokecache.Cache) {
 			if entry.baseExp > expSecondFrom {
 				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 				if err == nil {
-					fmt.Println(entry.pokemon.Name + " is evolving...")
+					// fmt.Println(entry.pokemon.Name + " is evolving...")
 					pokemon, err := p.GetPokemon(entry.pokemon.Name)
 					if err == nil {
 						p.WithdrawPokemon(pokemon.pokemon.Name)
-						fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
+						// fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
 						p.AddPokemon(poke_result)
 					}
 				}
 			} else if entry.baseExp > expFirstForm {
 				poke_result, err := fetch.GETEvolID(url, value.pokemon.Name, &fetch.Config_params{}, cache)
 				if err == nil {
-					fmt.Println(entry.pokemon.Name + " is evolving...")
+					// fmt.Println(entry.pokemon.Name + " is evolving...")
 					pokemon, err := p.GetPokemon(entry.pokemon.Name)
 					if err == nil {
 						p.WithdrawPokemon(pokemon.pokemon.Name)
-						fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
+						// fmt.Println(entry.pokemon.Name + " evolved into " + poke_result.Name)
 						p.AddPokemon(poke_result)
 					}
 				}

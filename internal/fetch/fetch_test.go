@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestGET(t *testing.T) {
+func TestGETPokeLoc(t *testing.T) {
 	const interval = 5 * time.Second
 	cache := pokecache.NewCache(interval)
 	querys := Config_params{
@@ -15,13 +15,13 @@ func TestGET(t *testing.T) {
 		Limit:  1,
 	}
 	fmt.Println("Test Case 1 - Valid URL")
-	_, ok := GET("https://pokeapi.co/api/v2/location-area/", &querys, cache)
+	_, ok := GETPokeLoc("https://pokeapi.co/api/v2/location-area/", &querys, cache)
 	if ok != nil {
 		t.Errorf(ok.Error())
 	}
 
 	fmt.Println("Test Case 2 - Invalid URL")
-	_, ok = GET("", &querys, cache)
+	_, ok = GETPokeLoc("", &querys, cache)
 	fmt.Println(ok)
 	if ok.Error() != "undefined url" {
 		t.Errorf("Expected 'undefined url' but found ''")
@@ -86,18 +86,24 @@ func TestAddPokemon(t *testing.T) {
 }
 
 func TestGetSeenPoke(t *testing.T) {
+	const interval = 5 * time.Second
+	cache := pokecache.NewCache(interval)
+	params := Config_params{
+		Offset: 5,
+		Limit:  10,
+	}
 	fmt.Println("Test Case 1 - Pokemon exists")
 	seenPoke := CreateSeenPoke()
 	pokemon := "bulbasaur"
 	seenPoke.AddPokemon(pokemon)
-	_, exist := seenPoke.GetPokemon("bulbasaur")
+	_, exist := seenPoke.GetPokemon("bulbasaur", &params, cache)
 	if exist != nil {
 		t.Errorf("Expected nil but found error")
 	}
 
 	fmt.Println("Test Case 2 - Pokemon does not exist")
 	seenPoke = CreateSeenPoke()
-	_, exist = seenPoke.GetPokemon("bulbasaur")
+	_, exist = seenPoke.GetPokemon("bulbasaur", &params, cache)
 	if exist == nil {
 		t.Errorf("Expected error but found none")
 	}

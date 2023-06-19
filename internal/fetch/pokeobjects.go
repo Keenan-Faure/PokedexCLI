@@ -1,5 +1,26 @@
 package fetch
 
+var PokeTypes = map[string]string{
+	"fire":     "🔥",
+	"water":    "💦",
+	"electric": "⚡️",
+	"ground":   "🗻",
+	"ice":      "❄️",
+	"psychic":  "🔮",
+	"bug":      "🐞",
+	"poison":   "☠️",
+	"fighting": "🥷",
+	"normal":   "🙂",
+	"grass":    "🌾",
+	"rock":     "🪨",
+	"ghost":    "👻",
+	"dark":     "😈",
+	"dragon":   "🐉",
+	"steel":    "🦾",
+	"fairy":    "🦄",
+	"flying":   "🦅",
+}
+
 type pokeloc struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`

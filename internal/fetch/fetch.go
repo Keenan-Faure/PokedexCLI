@@ -28,14 +28,18 @@ func CreateSeenPoke() SeenPoke {
 	return seenPoke
 }
 
-func (sp *SeenPoke) GetPokemon(pokemonName string) (string, error) {
+func (sp *SeenPoke) GetPokemon(pokemonName string, conf *Config_params, cache pokecache.Cache) (string, error) {
 	sp.Mux.Lock()
 	defer sp.Mux.Unlock()
+	_, err := GETPokemon("https://pokeapi.co/api/v2/pokemon/"+pokemonName, conf, cache)
+	if err != nil {
+		return "", err
+	}
 	pokemon, exist := sp.seenPoke[pokemonName]
 	if exist {
 		return pokemon, nil
 	}
-	return "", errors.New("never seen a " + pokemonName + " yet\nplease explore your world...")
+	return "", errors.New("never seen a '" + pokemonName + "' yet\nplease explore your world...")
 }
 
 func (sp *SeenPoke) AddPokemon(pokemonName string) {
@@ -48,9 +52,7 @@ func (sp *SeenPoke) CountSeenPokemon() int {
 	return len(sp.seenPoke)
 }
 
-func GET(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error) {
-	//check type of parameter and return respective value
-	//perhaps store it inside an array for EOA
+func GETPokeLoc(url string, query_params *Config_params, cache pokecache.Cache) (pokeloc, error) {
 	if url != "" {
 		url = AddParams(url, query_params)
 		cachedValue, exists := cache.Get(url)

@@ -9,12 +9,11 @@ import (
 	"pokecache"
 	"pokefarm"
 	"pokeparty"
-	"reflect"
 	"strings"
 	"time"
 )
 
-//DRY the fetch functions
+//DRY the fetch functions - last ask Matt
 //add a pokemon feel to the cli
 //pokemon types like 🦅 for flying type etc
 
@@ -22,8 +21,12 @@ const cacheDuration = 15 * time.Second
 const pokeFarmInterval = 20 * time.Second
 
 func main() {
+	fmt.Println("   =====   ")
+	fmt.Println(" =       =")
+	fmt.Println("=====0=====")
+	fmt.Println(" =       = ")
+	fmt.Println("   =====   ")
 	pokeseen := fetch.CreateSeenPoke()
-	fmt.Println(reflect.TypeOf(pokeseen))
 	cache := pokecache.NewCache(cacheDuration)
 	pokeparty := pokeparty.CreatePokeParty()
 	pokefarm := pokefarm.CreatePokeFarm(pokeFarmInterval, cache)

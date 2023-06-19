@@ -1,4 +1,4 @@
-module github.com/keenan-faure/pokedexcli
+module github.com/keenan-faure/pokemon
 
 replace internal/fetch => ./internal/fetch
 

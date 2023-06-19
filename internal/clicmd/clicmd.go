@@ -175,7 +175,7 @@ func commandInspect(
 			}
 			fmt.Println("Types:")
 			for _, key := range value.Types {
-				fmt.Println(" - ", key.Type.Name)
+				fmt.Println(" - ", key.Type.Name+" "+fetch.PokeTypes[key.Type.Name])
 			}
 		}
 	}
@@ -193,11 +193,11 @@ func commandCatch(
 	pokeparty *pokeparty.PokeParty,
 	pokeseen *fetch.SeenPoke) error {
 	if name != "" {
-		_, err := pokeseen.GetPokemon(name)
+		pokemon, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/"+name, conf, cache)
 		if err != nil {
 			return err
 		}
-		pokemon, err := fetch.GETPokemon("https://pokeapi.co/api/v2/pokemon/"+name, conf, cache)
+		_, err = pokeseen.GetPokemon(name, conf, cache)
 		if err != nil {
 			return err
 		}
@@ -329,7 +329,7 @@ func commandMap(
 	pokeparty *pokeparty.PokeParty,
 	pokeseen *fetch.SeenPoke) error {
 	incrementConf(conf)
-	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
+	resp, err := fetch.GETPokeLoc("https://pokeapi.co/api/v2/location-area/", conf, cache)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func commandMapb(
 	if err != nil {
 		return err
 	}
-	resp, err := fetch.GET("https://pokeapi.co/api/v2/location-area/", conf, cache)
+	resp, err := fetch.GETPokeLoc("https://pokeapi.co/api/v2/location-area/", conf, cache)
 	if err != nil {
 		return err
 	}

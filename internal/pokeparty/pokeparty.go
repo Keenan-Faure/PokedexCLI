@@ -65,9 +65,9 @@ func (p *PokeParty) CheckPartyPokemon() {
 		for _, value := range p.pokeParty {
 			t1, t2 := getTypes(value)
 			if t2 != "" {
-				fmt.Printf("%d. ===> %s		===> %s, %s", i+1, value.Name, t1, t2)
+				fmt.Printf("%d. ===> %s	===> %s, %s", i+1, value.Name, t1, t2)
 			} else {
-				fmt.Printf("%d. ===> %s		===> %s", i+1, value.Name, t1)
+				fmt.Printf("%d. ===> %s	===> %s", i+1, value.Name, t1)
 			}
 			fmt.Println("")
 			i++
@@ -79,7 +79,8 @@ func (p *PokeParty) CheckPartyPokemon() {
 // Retrieves the types of the pokemon
 func getTypes(pokemon fetch.Pokemon) (string, string) {
 	if len(pokemon.Types) > 1 {
-		return pokemon.Types[0].Type.Name, pokemon.Types[1].Type.Name
+		return (pokemon.Types[0].Type.Name + fetch.PokeTypes[pokemon.Types[0].Type.Name]),
+			(pokemon.Types[1].Type.Name + " " + fetch.PokeTypes[pokemon.Types[1].Type.Name])
 	}
-	return pokemon.Types[0].Type.Name, ""
+	return (pokemon.Types[0].Type.Name + " " + fetch.PokeTypes[pokemon.Types[0].Type.Name]), ""
 }
